@@ -10,16 +10,21 @@ from rest_framework.views import APIView
 class EventView(APIView):
     permission_classes = [IsAuthenticated]
 
-    def get(self, request):
+    def get(self, request, pk=None):
+        if pk:
+            try:
+                event = Event.objects.get(pk=pk)
+                serializer = EventSerializer(event)
+                return Response(serializer.data, status=status.HTTP_200_OK)
+            except Event.DoesNotExist:
+                return Response({"error": "Event not found"}, status=status.HTTP_404_NOT_FOUND)
+
         queryset = Event.objects.all()
         events = EventSerializer(queryset, many=True)
 
         return Response(events.data, status=status.HTTP_200_OK)
 
     def post(self, request):
-        # Deserialize the request data using the EventSerializer
-        print(request.__dict__)
-        # request.user
         serializer = EventSerializer(data=request.data)
 
         if serializer.is_valid():
@@ -27,5 +32,24 @@ class EventView(APIView):
             serializer.validated_data['organizer'] = request.user
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def patch(self, request, pk):
+        try:
+            event = Event.objects.get(event_id=pk)
+        except Event.DoesNotExist:
+            return Response({"error": "Event not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        # Deserialize the request data using the EventSerializer and specify the instance
+        serializer = EventSerializer(event, data=request.data, partial=True)
+
+        if serializer.is_valid():
+            # Ensure that the user making the patch request is the event organizer
+            if request.user == event.organizer:
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_200_OK)
+            else:
+                return Response({"error": "You do not have permission to update this event"}, status=status.HTTP_403_FORBIDDEN)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
