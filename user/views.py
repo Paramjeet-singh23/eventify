@@ -8,7 +8,6 @@ from rest_framework.permissions import IsAuthenticated
 
 
 class RegisterView(APIView):
-    permission_classes = [IsAuthenticated]
     def post(self, request):
         password = request.data.get('password')
         email = request.data.get('email')
@@ -23,7 +22,7 @@ class RegisterView(APIView):
         user = User.objects.create_user(password=password, email=email, first_name=first_name, last_name=last_name)
         user.save()
 
-        group, created = Group.objects.get_or_create(name='editor')
+        group, created = Group.objects.get_or_create(name='admin')
         group.user_set.add(user)
 
         return Response({'id': user.id, 'email': user.email}, status=status.HTTP_201_CREATED)
