@@ -1,10 +1,8 @@
 #!/bin/sh
 
+python manage.py collectstatic --no-input
+python manage.py migrate --no-input
 
-# Run Django migrations
-echo "Running migrations..."
-python manage.py migrate
-
-# Start the Django development server (or Gunicorn, or UWSGI, or any other server)
-echo "Starting server"
-python manage.py runserver 0.0.0.0:8000
+CORES=$(getconf _NPROCESSORS_ONLN)
+WORKERS=$((2 * $CORES + 1))
+gunicorn --workers=$WORKERS --bind=0.0.0.0:8000 eventify.wsgi:application

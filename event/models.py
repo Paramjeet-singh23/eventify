@@ -2,6 +2,13 @@ from django.db import models
 from user.models import User
 from django.core.exceptions import ValidationError
 
+LOCATIONS = (
+        ('NY', 'New York'),
+        ('LA', 'Los Angeles'),
+        ('SF', 'San Francisco'),
+        ('CHI', 'Chicago')
+    )
+
 
 class Event(models.Model):
     event_id = models.AutoField(primary_key=True)
@@ -11,6 +18,9 @@ class Event(models.Model):
     start_datetime = models.DateTimeField()
     end_datetime = models.DateTimeField()
     fee = models.IntegerField()
+    location = models.CharField(max_length=255, choices=LOCATIONS)
+    update_datetime = models.DateTimeField(auto_now=True)
+    create_datetime= models.DateTimeField(auto_now_add=True)
 
     class Meta:
         db_table = 'event'
